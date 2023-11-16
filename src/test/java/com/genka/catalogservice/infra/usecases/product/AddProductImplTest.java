@@ -4,6 +4,7 @@ import com.genka.catalogservice.application.gateways.product.ProductDatabaseGate
 import com.genka.catalogservice.application.messaging.MessagePublisher;
 import com.genka.catalogservice.application.usecases.product.dtos.AddProductInput;
 import com.genka.catalogservice.domain.product.Product;
+import com.genka.catalogservice.infra.mappers.ProductMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -22,7 +23,9 @@ class AddProductImplTest {
     @Mock
     private ProductDatabaseGateway productDatabaseGatewayMock;
     @Mock
-    MessagePublisher messagePublisherMock;
+    private MessagePublisher messagePublisherMock;
+    @Mock
+    private ProductMapper productMapperMock;
     @InjectMocks
     private AddProductImpl sut;
 
@@ -53,6 +56,7 @@ class AddProductImplTest {
                 "product_created",
                 "{\"productId\": \"" + savedProduct.getId() + "\", \"stockQuantity\": " + input.getStockQuantity() + "}"
         );
+        verify(productMapperMock, times(1)).mapEntityToDTO(savedProduct);
     }
 
 }

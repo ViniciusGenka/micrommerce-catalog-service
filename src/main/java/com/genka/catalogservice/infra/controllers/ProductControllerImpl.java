@@ -7,6 +7,7 @@ import com.genka.catalogservice.application.usecases.product.GetOneProduct;
 import com.genka.catalogservice.application.usecases.product.UpdateProduct;
 import com.genka.catalogservice.application.usecases.product.dtos.AddProductInput;
 import com.genka.catalogservice.application.usecases.product.dtos.UpdateProductInput;
+import com.genka.catalogservice.domain.product.Product;
 import com.genka.catalogservice.domain.product.dtos.ProductDTO;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -34,20 +35,23 @@ public class ProductControllerImpl implements ProductController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public void addProduct(@RequestBody AddProductInput addProductInput) {
-        this.addProductUseCase.execute(addProductInput);
+    public ResponseEntity<ProductDTO> addProduct(@RequestBody AddProductInput addProductInput) {
+        ProductDTO savedProduct = this.addProductUseCase.execute(addProductInput);
+        return ResponseEntity.status(HttpStatus.CREATED).body(savedProduct);
     }
 
     @PatchMapping("/{id}")
     @Override
-    public void updateProduct(@PathVariable UUID id, @RequestBody UpdateProductInput updateProductInput) {
-        this.updateProductUseCase.execute(id, updateProductInput);
+    public ResponseEntity<ProductDTO> updateProduct(@PathVariable UUID id, @RequestBody UpdateProductInput updateProductInput) {
+        ProductDTO updatedProduct = this.updateProductUseCase.execute(id, updateProductInput);
+        return ResponseEntity.status(HttpStatus.OK).body(updatedProduct);
     }
 
     @GetMapping("/{id}")
     @Override
     public ResponseEntity<ProductDTO> getOneProduct(@PathVariable UUID id) {
-        return ResponseEntity.status(HttpStatus.OK).body(this.GetOneProductUseCase.execute(id));
+        ProductDTO product = this.GetOneProductUseCase.execute(id);
+        return ResponseEntity.status(HttpStatus.OK).body(product);
     }
 
     @GetMapping

@@ -33,7 +33,6 @@ class UpdateProductImplTest {
     private ModelMapper modelMapperSpy;
     @Mock
     private MessagePublisher messagePublisher;
-
     @InjectMocks
     private UpdateProductImpl sut;
 
@@ -63,7 +62,6 @@ class UpdateProductImplTest {
         verify(productDatabaseGatewayMock, times(1)).findProductById(existingProductId);
         verify(modelMapperSpy, times(1)).map(updateProductInput, product);
         verify(productDatabaseGatewayMock, times(1)).saveProduct(expectedUpdatedProduct);
-        verify(productMapperMock, times(1)).mapEntityToDTO(expectedUpdatedProduct);
         verify(messagePublisher, times(1)).sendMessage(
                 "product_updated",
                 "{\"" +
@@ -74,6 +72,7 @@ class UpdateProductImplTest {
                         "\", \"stockQuantity\": " + updateProductInput.getStockQuantity() +
                         "}"
         );
+        verify(productMapperMock, times(1)).mapEntityToDTO(expectedUpdatedProduct);
     }
 
     @Test

@@ -1,7 +1,8 @@
 package com.genka.catalogservice.application.usecases.product;
 
 import com.genka.catalogservice.application.usecases.product.dtos.AddProductInput;
+import com.genka.catalogservice.domain.product.dtos.ProductDTO;
 
 public interface AddProduct {
-    void execute(AddProductInput addProductInput);
+    ProductDTO execute(AddProductInput addProductInput);
 }

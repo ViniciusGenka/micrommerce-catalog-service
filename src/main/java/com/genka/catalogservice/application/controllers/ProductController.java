@@ -9,9 +9,9 @@ import java.util.List;
 import java.util.UUID;
 
 public interface ProductController {
-    void addProduct(AddProductInput addProductInput);
+    ResponseEntity<ProductDTO> addProduct(AddProductInput addProductInput);
 
-    void updateProduct(UUID productId, UpdateProductInput updateProductInput);
+    ResponseEntity<ProductDTO> updateProduct(UUID productId, UpdateProductInput updateProductInput);
 
     ResponseEntity<ProductDTO> getOneProduct(UUID productId);
 
