@@ -3,6 +3,8 @@ package com.genka.catalogservice.infra.usecases.product;
 import com.genka.catalogservice.application.exceptions.EntityNotFoundException;
 import com.genka.catalogservice.application.gateways.product.ProductDatabaseGateway;
 import com.genka.catalogservice.application.messaging.MessagePublisher;
+import com.genka.catalogservice.application.services.PublishProductInventoryUpdatedEventService;
+import com.genka.catalogservice.application.services.PublishProductUpdatedEventService;
 import com.genka.catalogservice.application.usecases.product.dtos.UpdateProductInput;
 import com.genka.catalogservice.domain.product.Product;
 import com.genka.catalogservice.infra.mappers.ProductMapper;
@@ -32,7 +34,9 @@ class UpdateProductImplTest {
     @Spy
     private ModelMapper modelMapperSpy;
     @Mock
-    private MessagePublisher messagePublisher;
+    private PublishProductUpdatedEventService publishProductUpdatedEventService;
+    @Mock
+    private PublishProductInventoryUpdatedEventService publishProductInventoryUpdatedEventService;
     @InjectMocks
     private UpdateProductImpl sut;
 
@@ -52,8 +56,8 @@ class UpdateProductImplTest {
                 .price(BigDecimal.valueOf(369))
                 .build();
         Product expectedUpdatedProduct = Product.builder()
-                .id(existingProductId)
-                .name("Any product name")
+                .id(product.getId())
+                .name(updateProductInput.getName())
                 .description(updateProductInput.getDescription())
                 .price(BigDecimal.valueOf(369))
                 .build();
@@ -62,16 +66,39 @@ class UpdateProductImplTest {
         verify(productDatabaseGatewayMock, times(1)).findProductById(existingProductId);
         verify(modelMapperSpy, times(1)).map(updateProductInput, product);
         verify(productDatabaseGatewayMock, times(1)).saveProduct(expectedUpdatedProduct);
-        verify(messagePublisher, times(1)).sendMessage(
-                "product_updated",
-                "{\"" +
-                        "id\": \"" + product.getId() +
-                        "name\": \"" + product.getName() +
-                        "description\": \"" + product.getDescription() +
-                        "price\": \"" + product.getPrice() +
-                        "\", \"stockQuantity\": " + updateProductInput.getStockQuantity() +
-                        "}"
-        );
+        verify(publishProductUpdatedEventService, times(1)).execute(expectedUpdatedProduct);
+        verify(productMapperMock, times(1)).mapEntityToDTO(expectedUpdatedProduct);
+    }
+
+    @Test
+    @DisplayName("It should find the product, make the updates, save the changes, map the updated product to a ProductDTO and publish ProductUpdatedEvent and ProductInventoryUpdatedEvent")
+    void updateProductInventoryIfFound() {
+        UUID existingProductId = UUID.randomUUID();
+        Product product = Product.builder()
+                .id(existingProductId)
+                .name("Any product name")
+                .description("Any product description")
+                .price(BigDecimal.valueOf(300))
+                .build();
+        UpdateProductInput updateProductInput = UpdateProductInput.builder()
+                .name("Any product name")
+                .description("Any change")
+                .price(BigDecimal.valueOf(400))
+                .stockQuantity(50)
+                .build();
+        Product expectedUpdatedProduct = Product.builder()
+                .id(product.getId())
+                .name(updateProductInput.getName())
+                .description(updateProductInput.getDescription())
+                .price(BigDecimal.valueOf(400))
+                .build();
+        when(productDatabaseGatewayMock.findProductById(existingProductId)).thenReturn(Optional.of(product));
+        sut.execute(existingProductId, updateProductInput);
+        verify(productDatabaseGatewayMock, times(1)).findProductById(existingProductId);
+        verify(modelMapperSpy, times(1)).map(updateProductInput, product);
+        verify(productDatabaseGatewayMock, times(1)).saveProduct(expectedUpdatedProduct);
+        verify(publishProductUpdatedEventService, times(1)).execute(expectedUpdatedProduct);
+        verify(publishProductInventoryUpdatedEventService, times(1)).execute(product.getId(), updateProductInput.getStockQuantity());
         verify(productMapperMock, times(1)).mapEntityToDTO(expectedUpdatedProduct);
     }
 
@@ -85,8 +112,6 @@ class UpdateProductImplTest {
                 .price(BigDecimal.valueOf(369))
                 .build();
         when(productDatabaseGatewayMock.findProductById(nonexistentProductId)).thenReturn(Optional.empty());
-        assertThrows(EntityNotFoundException.class, () -> {
-            sut.execute(nonexistentProductId, updateProductInput);
-        });
+        assertThrows(EntityNotFoundException.class, () -> sut.execute(nonexistentProductId, updateProductInput));
     }
 }
