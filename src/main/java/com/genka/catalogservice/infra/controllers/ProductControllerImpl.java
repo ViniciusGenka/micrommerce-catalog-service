@@ -7,8 +7,8 @@ import com.genka.catalogservice.application.usecases.product.GetOneProduct;
 import com.genka.catalogservice.application.usecases.product.UpdateProduct;
 import com.genka.catalogservice.application.usecases.product.dtos.AddProductInput;
 import com.genka.catalogservice.application.usecases.product.dtos.UpdateProductInput;
-import com.genka.catalogservice.domain.product.Product;
 import com.genka.catalogservice.domain.product.dtos.ProductDTO;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -21,9 +21,7 @@ import java.util.UUID;
 public class ProductControllerImpl implements ProductController {
     private final AddProduct addProductUseCase;
     private final GetAllProducts getAllProductsUseCase;
-
     private final GetOneProduct GetOneProductUseCase;
-
     private final UpdateProduct updateProductUseCase;
 
     public ProductControllerImpl(AddProduct addProductUseCase, GetAllProducts getAllProductsUseCase, GetOneProduct getOneProduct, UpdateProduct updateProductUseCase) {
@@ -35,7 +33,7 @@ public class ProductControllerImpl implements ProductController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public ResponseEntity<ProductDTO> addProduct(@RequestBody AddProductInput addProductInput) {
+    public ResponseEntity<ProductDTO> addProduct(@RequestBody @Valid AddProductInput addProductInput) {
         ProductDTO savedProduct = this.addProductUseCase.execute(addProductInput);
         return ResponseEntity.status(HttpStatus.CREATED).body(savedProduct);
     }
